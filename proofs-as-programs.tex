@@ -1,0 +1,187 @@
+\documentclass[11pt, oneside]{article}   	% use "amsart" instead of "article" for AMSLaTeX format
+\usepackage{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   		% ... or a4paper or a5paper or ... 
+%\geometry{landscape}                		% Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}				% Use pdf, png, jpg, or eps§ with pdflatex; use eps in DVI mode
+								% TeX will automatically convert eps --> pdf in pdflatex		
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\title{Notes on Proofs as Programs}
+\author{Arthur Ryman}
+\date{}							% Activate to display a given date or no date
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+The fascinating correspondence between proofs and programs has become a central aspect of modern
+computer science.
+These notes explain the correspondence.
+
+The usual approach to formal logic is that first one is given some formal language in which one can make statements.
+The language has a grammar that lets us use logical connectives to combine statements into new statements.
+The specifics of the language vary depending on the desired expressive power.
+For example, propositional logic involves simple true-false statements, e.g. Alice loves Bob, 
+whereas predicate logic allows one to make complex statements about
+objects drawn from some, possibly infinite, universe of discourse, e.g. Alice loves everyone.
+
+It is further supposed that statements are either true or false in any given situation.
+A situation is also called an interpretation.
+For example Alice may or may not love Bob, but we make the simplifying assumption that exactly one of the two
+alternatives hold.
+A statement that is either true or false is called a proposition.
+
+One is then given rules of sound deduction that specify how to derive new statements from given statements.
+The given statements are called assumptions, antecedents, premises, or hypotheses.
+The derived statement is called the conclusion or consequence.
+The rules are sound in the sense that if the assumptions are true then the conclusion is true.
+A chain of applications of the sound rules of deduction is called a proof.
+
+Historically, proofs were not treated as formal mathematics objects.
+The correspondence of proofs with programs begins by treating proofs as mathematical objects.
+
+Now suppose that proofs are mathematical objects and it makes sense to talk about the set of all proofs
+and its various subsets.
+Given a proposition $P$ we can consider the set of all proofs of $P$.
+We refer to the set of all proofs of a given proposition as the type associated with the proposition.
+This is the {\it propositions as types} viewpoint.
+Suppose that $x$ is a proof of $P$.
+We denote this as follows:
+$$
+x : P
+$$
+
+The fascinating thing about this viewpoint is that the logical connectives on propositions correspond to familiar constructors
+on the corresponding types!
+
+\subsection{Falsity}
+
+Let $F$ denote a proposition that is false in all situations.
+Since $F$ is never true, it has no proof.
+The type corresponding to $F$ is therefore the empty set.
+$$
+F \sim \emptyset
+$$
+
+I am tempted to say that we have the following entailment:
+$$
+x : F \vdash y : P
+$$
+
+\subsection{Truth}
+
+Let $T$ be a proposition that is true in all situations.
+In a sense, $T$ is self-evident so it requires no proof.
+However, we want to have at least one proof for each true proposition so we'll introduce the
+symbol $I$ for this purpose.
+We only need one proof of $T$ so we can regard the type of T as the singleton set whose unique member is $I$.
+$$
+T \sim \{ I \}
+$$
+
+We have the following entailment:
+$$
+\vdash I : T
+$$
+
+\subsection{Conjunction}
+
+Let $P$ and $Q$ be propositions and consider their conjunction $P \land Q$.
+What constitutes a proof of the conjunction?
+Clearly, if we can prove each proposition then we have proved the conjunction.
+Let $x : P$ and $y : Q$.
+It is natural to regard the ordered pair $(x, y)$ as a proof of $P \land Q$.
+Mathematically, an ordered pair is an element of the Cartesian product of two sets.
+Therefore, the type of a conjunction is the Cartesian product of the types of the conjuncts:
+$$
+P \land Q \sim P \times Q
+$$
+
+We have the following entailment:
+$$
+x : P, y : Q \vdash (x, y) : P \land Q
+$$
+
+$P \times Q$ corresponds to a {\it record} or {\it struct} data type in computer programming languages.
+
+As a sanity check, let's see if our correspondences for falsity, truth, and conjunction behave sensibly.
+For example, $F \land P \Leftrightarrow F$ so we should have $F \times P \cong F$.
+\begin{align*}
+F \land P	&\sim F \times P \\
+		&= \emptyset \times P \\
+		&\cong \emptyset \\
+		&\sim F
+\end{align*}
+
+Similarly $T \land P \Leftrightarrow P$ so we should have $T \times P \cong P$.
+\begin{align*}
+T \times P &\sim T \times P \\
+		&= \{ I \} \times P \\
+		&\cong P
+\end{align*}
+
+This last result confirms that it makes sense to require the type corresponding to $T$ to be a singleton.
+
+\subsection{Disjunction}
+
+Following similar reasoning, we have a proof of the disjunction $P \lor Q$ if we are given
+a proof of either $P$ or $Q$.
+Mathematically, the set of elements from $P$ and $Q$, along with an indicator of which set they came from,
+is called their disjoint union or sum and is denoted $P + Q$.
+One can think of the sum $P+Q$ as $\{1\} \times P \cup \{2\} \times Q$.
+$$
+P \lor Q \sim P + Q
+$$
+
+We have the following entailments:
+\begin{eqnarray*}
+x : P \vdash (1, x) : P \lor Q \\
+y : Q \vdash (2, y) : P \lor Q
+\end{eqnarray*}
+
+$P + Q$ corresponds to a {\it discriminated union} or {\it variant record} data type in computer programming languages.
+
+Now consider $T \lor P \equiv P$. Does this carry over to the corresponding types?
+\begin{align*}
+T \lor P	&\sim T + P \\
+		&= \{ I \} + P \\
+		&\neq P
+\end{align*}
+
+Looks like the correspondence is not exact.
+Perhaps we need to define a notion of equivalence of proofs.
+Perhaps we can have more than one proof of $T$ but regard them all as equivalent.
+Time to watch more videos.
+
+\subsection{Implication}
+
+If we have proofs of $P$ and $P \Rightarrow Q$ then we have a proof of $Q$.
+It is therefore natural to regard a proof of $P \Rightarrow Q$ as a program or mapping or function that takes as
+input any proof of $P$ and produces as output a proof of $Q$.
+$$
+P \Rightarrow Q \sim P \rightarrow Q
+$$
+
+We have the following entailment:
+$$
+x : P, f : P \Rightarrow Q \vdash f(x) : Q
+$$
+
+\subsection{Biconditional}
+
+The biconditional logical connective is defined in terms of implication and conjunction, so we can compute its corresponding
+type.
+\begin{align*}
+P \Leftrightarrow Q	&\equiv (P \implies Q) \land (Q \implies P) \\
+				&\sim (P \rightarrow Q) \times (Q \rightarrow P) 
+\end{align*}
+
+\subsection{Negation}
+
+
+
+\end{document}  
